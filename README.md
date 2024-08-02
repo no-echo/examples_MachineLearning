@@ -1121,11 +1121,174 @@ for data in dataloader:
 
 有助于提高计算效率，减少内存占用，并且在某些情况下还可以提高模型的泛化能力
 
+## 神经网络实战
+
+```python
+import torch
+from torch import nn
+from torch.nn import Sequential, Conv2d, MaxPool2d, Flatten, Linear
+from torch.utils.tensorboard import SummaryWriter
 
 
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()
+        self.model1 = Sequential(
+            Conv2d(3, 32, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Conv2d(32, 32, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Conv2d(32, 64, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Flatten(),
+            Linear(1024, 64),
+            Linear(64, 10)
+        )
+    def forward(self, x):
+        x = self.model1(x)
+        return x
 
+tudui = Tudui()
+print(tudui)
+input = torch.ones((64, 3, 32, 32))
+output = tudui(input)
+print(output.shape)
 
+Writer = SummaryWriter(log_dir='../logs/logs_seq')
+Writer.add_graph(tudui, input)
+Writer.close()
+```
 
+```python
+import torch
+from torch import nn  # 导入 PyTorch 的神经网络模块
+from torch.nn import Sequential, Conv2d, MaxPool2d, Flatten, Linear  # 从 nn 模块中导入常用的神经网络层
+from torch.utils.tensorboard import SummaryWriter  # 导入 SummaryWriter 用于记录日志
 
+# 定义一个自定义的神经网络类 Tudui，继承自 nn.Module
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()  # 调用父类的构造函数初始化
+        self.model1 = Sequential(  # 使用 Sequential 组合多个神经网络层
+            Conv2d(3, 32, kernel_size=5, padding=2),  # 2D 卷积层：输入通道数为 3，输出通道数为 32，卷积核大小为 5x5，使用 2 像素的填充
+            MaxPool2d(2),  # 2D 最大池化层：池化窗口大小为 2x2
+            Conv2d(32, 32, kernel_size=5, padding=2),  # 另一个卷积层：输入通道数为 32，输出通道数为 32
+            MaxPool2d(2),  # 最大池化层：窗口大小为 2x2
+            Conv2d(32, 64, kernel_size=5, padding=2),  # 卷积层：输入通道数为 32，输出通道数为 64
+            MaxPool2d(2),  # 最大池化层：窗口大小为 2x2
+            Flatten(),  # 展平层：将多维的卷积图像展平成一维向量
+            Linear(1024, 64),  # 全连接层：输入特征数为 1024，输出特征数为 64
+            Linear(64, 10)  # 全连接层：输入特征数为 64，输出特征数为 10
+        )
 
+    def forward(self, x):
+        x = self.model1(x)  # 前向传播：将输入 x 通过模型中的层依次传递
+        return x  # 返回最终输出
+
+tudui = Tudui()  # 实例化自定义网络
+print(tudui)  # 打印网络结构
+
+input = torch.ones((64, 3, 32, 32))  # 创建一个形状为 (64, 3, 32, 32) 的全 1 张量作为输入（batch size=64，3 通道，32x32 图片）
+output = tudui(input)  # 将输入数据通过网络进行前向传播
+print(output.shape)  # 打印输出的形状（应为 64x10）
+
+Writer = SummaryWriter(log_dir='../logs/logs_seq')  # 创建 SummaryWriter 实例，用于记录网络结构和数据日志
+Writer.add_graph(tudui, input)  # 将网络模型和输入添加到日志中，用于在 TensorBoard 中可视化
+Writer.close()  # 关闭 SummaryWriter
+```
+
+## 神经网络-损失函数Loss Functions
+
++ 损失函数：
+  + 计算实际输出值和目标之间的差距。
+  + 为我们更新输出提供一定的依据（反向传播），grad梯度。
+
+```python
+import torch
+import torchvision
+from torch import nn
+from torch.nn import Sequential, Conv2d, MaxPool2d, Flatten, Linear
+from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+from torchvision import transforms
+
+dataset = torchvision.datasets.CIFAR10(root='../data/data_18', train=False, download=True,
+                                       transform=torchvision.transforms.ToTensor())
+dataloader = DataLoader(dataset, batch_size=1)
+
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()
+        self.model1 = Sequential(
+            Conv2d(3, 32, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Conv2d(32, 32, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Conv2d(32, 64, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Flatten(),
+            Linear(1024, 64),
+            Linear(64, 10)
+        )
+    def forward(self, x):
+        x = self.model1(x)
+        return x
+
+loss = nn.CrossEntropyLoss()
+tudui = Tudui()
+for data in dataloader:
+    imgs, targets = data
+    output = tudui(imgs)
+    result_loss = loss(output, targets)
+    result_loss.backward()
+    print('ok')
+```
+
+```python
+import torch  # 导入PyTorch库
+import torchvision  # 导入torchvision库
+from torch import nn  # 从torch库中导入神经网络模块
+from torch.nn import Sequential, Conv2d, MaxPool2d, Flatten, Linear  # 从nn模块导入常用的层
+from torch.utils.data import DataLoader  # 导入数据加载器
+from torch.utils.tensorboard import SummaryWriter  # 导入tensorboard工具
+from torchvision import transforms  # 导入数据变换工具
+
+# 加载CIFAR10数据集，存储路径为'../data/data_18'，设置不进行训练模式，并自动下载
+dataset = torchvision.datasets.CIFAR10(root='../data/data_18', train=False, download=True,
+                                       transform=torchvision.transforms.ToTensor())
+# 创建数据加载器，batch_size设置为1
+dataloader = DataLoader(dataset, batch_size=1)
+
+# 定义一个名为Tudui的神经网络模型，继承自nn.Module
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()  # 调用父类的构造函数
+        # 定义模型的第一部分model1，由多个层组成的序列
+        self.model1 = Sequential(
+            Conv2d(3, 32, kernel_size=5, padding=2),  # 卷积层，输入通道数3，输出通道数32，卷积核大小5x5，填充2
+            MaxPool2d(2),  # 最大池化层，池化窗口大小2x2
+            Conv2d(32, 32, kernel_size=5, padding=2),  # 卷积层，输入输出通道数32，卷积核大小5x5，填充2
+            MaxPool2d(2),  # 最大池化层，池化窗口大小2x2
+            Conv2d(32, 64, kernel_size=5, padding=2),  # 卷积层，输入通道数32，输出通道数64，卷积核大小5x5，填充2
+            MaxPool2d(2),  # 最大池化层，池化窗口大小2x2
+            Flatten(),  # 展平层，将多维张量展平成一维
+            Linear(1024, 64),  # 全连接层，输入大小1024，输出大小64
+            Linear(64, 10)  # 全连接层，输入大小64，输出大小10
+        )
+
+    def forward(self, x):  # 定义前向传播方法
+        x = self.model1(x)  # 将输入x传入模型的第一部分
+        return x  # 返回输出
+
+loss = nn.CrossEntropyLoss()  # 定义交叉熵损失函数
+tudui = Tudui()  # 创建Tudui模型的实例
+
+# 遍历数据加载器，进行模型训练
+for data in dataloader:
+    imgs, targets = data  # 解包数据和标签
+    output = tudui(imgs)  # 获取模型输出
+    result_loss = loss(output, targets)  # 计算损失
+    result_loss.backward()  # 反向传播计算梯度
+    print('ok')  # 打印确认信息
+```
 
