@@ -36,3 +36,5 @@ for data in dataloader:
     result_loss = loss(output, targets)
     result_loss.backward()
     print('ok')
+
+print("2024-8-4")
