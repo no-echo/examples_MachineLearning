@@ -30,9 +30,15 @@ class Tudui(nn.Module):
 
 loss = nn.CrossEntropyLoss()
 tudui = Tudui()
-for data in dataloader:
-    imgs, targets = data
-    output = tudui(imgs)
-    result_loss = loss(output, targets)
-    result_loss.backward()
-    print('ok')
+optim = torch.optim.SGD(tudui.parameters(), lr=0.01)
+for epoch in range(20):
+    running_loss = 0.0
+    for data in dataloader:
+        imgs, targets = data
+        output = tudui(imgs)
+        result_loss = loss(output, targets)
+        optim.zero_grad()
+        result_loss.backward()
+        optim.step()
+        running_loss = running_loss + result_loss
+    print(running_loss)
