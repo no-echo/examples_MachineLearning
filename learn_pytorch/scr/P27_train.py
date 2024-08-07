@@ -46,6 +46,7 @@ for i in range(epoch):
     print("--------第{}轮训练开始了-----------".format(i+1))
 
     # 训练步骤开始
+    tudui.train()
     for data in train_dataloader:
         imgs, targets = data
         outputs = tudui(imgs)
@@ -61,6 +62,7 @@ for i in range(epoch):
             writer.add_scalar('train_loss', loss.item(), total_train_step)
 
     # 测试步骤开始
+    tudui.eval()
     total_test_loss = 0
     total_accuracy = 0
     with torch.no_grad():
@@ -79,6 +81,7 @@ for i in range(epoch):
     total_test_step += 1
 
     torch.save(tudui, "tudui_{}.pth".format(i))
+    # torch.save(tudui,state_dict(), "tudui_{}.pth".format(i))
     print("模型已保存")
 
 writer.close()
