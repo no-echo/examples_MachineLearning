@@ -1292,3 +1292,674 @@ for data in dataloader:
     print('ok')  # 打印确认信息
 ```
 
+## 神经网络-优化器Opimizer
+
+调整模型参数以最小化损失函数（或代价函数），从而提高模型的性能和精确度。
+
+```python
+import torch
+import torchvision
+from torch import nn
+from torch.nn import Sequential, Conv2d, MaxPool2d, Flatten, Linear
+from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+from torchvision import transforms
+
+dataset = torchvision.datasets.CIFAR10(root='../data/data_18', train=False, download=True,
+                                       transform=torchvision.transforms.ToTensor())
+dataloader = DataLoader(dataset, batch_size=1)
+
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()
+        self.model1 = Sequential(
+            Conv2d(3, 32, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Conv2d(32, 32, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Conv2d(32, 64, kernel_size=5, padding=2),
+            MaxPool2d(2),
+            Flatten(),
+            Linear(1024, 64),
+            Linear(64, 10)
+        )
+    def forward(self, x):
+        x = self.model1(x)
+        return x
+
+loss = nn.CrossEntropyLoss()
+tudui = Tudui()
+optim = torch.optim.SGD(tudui.parameters(), lr=0.01)
+for epoch in range(20):
+    running_loss = 0.0
+    for data in dataloader:
+        imgs, targets = data
+        output = tudui(imgs)
+        result_loss = loss(output, targets)
+        optim.zero_grad()
+        result_loss.backward()
+        optim.step()
+        running_loss = running_loss + result_loss
+    print(running_loss)
+```
+
+```python
+import torch  # 导入PyTorch库
+import torchvision  # 导入torchvision库，用于处理视觉数据
+from torch import nn  # 从torch中导入神经网络模块
+from torch.nn import Sequential, Conv2d, MaxPool2d, Flatten, Linear  # 导入神经网络相关的类
+from torch.utils.data import DataLoader  # 导入数据加载器类
+from torch.utils.tensorboard import SummaryWriter  # 导入用于TensorBoard可视化的类
+from torchvision import transforms  # 导入数据转换模块
+
+# 下载CIFAR10数据集，并将其转换为Tensor
+dataset = torchvision.datasets.CIFAR10(
+    root='../data/data_18',  # 数据集存储的路径
+    train=False,  # 设置为False表示加载测试集
+    download=True,  # 如果数据集不存在则进行下载
+    transform=torchvision.transforms.ToTensor()  # 将数据转换为Tensor
+)
+
+# 创建数据加载器，设置批量大小为1
+dataloader = DataLoader(dataset, batch_size=1)
+
+# 定义一个神经网络类Tudui，继承自nn.Module
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()  # 初始化父类
+        self.model1 = Sequential(  # 使用Sequential容器按顺序定义网络层
+            Conv2d(3, 32, kernel_size=5, padding=2),  # 2D卷积层，输入通道3，输出通道32，卷积核大小5，边缘填充2
+            MaxPool2d(2),  # 2D最大池化层，窗口大小2
+            Conv2d(32, 32, kernel_size=5, padding=2),  # 2D卷积层
+            MaxPool2d(2),  # 2D最大池化层
+            Conv2d(32, 64, kernel_size=5, padding=2),  # 2D卷积层
+            MaxPool2d(2),  # 2D最大池化层
+            Flatten(),  # 展平操作，将多维输入一维化
+            Linear(1024, 64),  # 全连接层，输入1024个神经元，输出64个神经元
+            Linear(64, 10)  # 全连接层，输入64个神经元，输出10个神经元（分类为10类）
+        )
+
+    # 定义前向传播方法
+    def forward(self, x):
+        x = self.model1(x)  # 将输入x通过网络层
+        return x  # 返回输出
+
+# 定义交叉熵损失函数
+loss = nn.CrossEntropyLoss()
+
+# 实例化网络
+tudui = Tudui()
+
+# 定义优化器，使用随机梯度下降法（SGD），学习率为0.01
+optim = torch.optim.SGD(tudui.parameters(), lr=0.01)
+
+# 训练20个epoch
+for epoch in range(20):
+    running_loss = 0.0  # 初始化累计损失为0
+    # 遍历数据加载器中的每一个批次数据
+    for data in dataloader:
+        imgs, targets = data  # 获取图像及其对应的标签
+        output = tudui(imgs)  # 将图像输入到网络中，获取输出
+        result_loss = loss(output, targets)  # 计算损失
+        optim.zero_grad()  # 清除梯度
+        result_loss.backward()  # 反向传播计算梯度
+        optim.step()  # 更新模型参数
+        running_loss = running_loss + result_loss  # 累加损失
+    print(running_loss)  # 输出当前epoch的累计损失
+```
+
+# 网络模型
+
+## 现有网络模型的使用与修改
+
+```python
+import torchvision
+from torch import nn
+
+# train_data = torchvision.datasets.ImageNet(root='../data/data_25', train=True, download=True,
+#                                           transform=torchvision.transforms.ToTensor())
+
+vgg16_false = torchvision.models.vgg16(pretrained=False)
+vgg16_true = torchvision.models.vgg16(pretrained=True)
+
+print(vgg16_true)
+
+train_data = torchvision.datasets.CIFAR10(root='../data/data_18', train=True, download=True,
+                                          transform=torchvision.transforms.ToTensor())
+
+# vgg16_true.add_module('add_linear', nn.Linear(1000, 10))
+vgg16_true.classifier.add_module('add_linear', nn.Linear(in_features=1000, out_features=10))
+print(vgg16_true)
+
+print(vgg16_false)
+vgg16_false.classifier[6] = nn.Linear(in_features=4096, out_features=10)
+print(vgg16_false)
+```
+
+```python
+import torchvision
+from torch import nn
+
+# 导入torchvision库，主要用于计算机视觉任务。
+# 导入PyTorch的nn模块，用于构建神经网络。
+
+# train_data = torchvision.datasets.ImageNet(root='../data/data_25', train=True, download=True,
+#                                           transform=torchvision.transforms.ToTensor())
+
+# 使用VGG16模型，未使用预训练权重。
+vgg16_false = torchvision.models.vgg16(pretrained=False)
+# 使用VGG16模型，使用预训练权重。
+vgg16_true = torchvision.models.vgg16(pretrained=True)
+
+# 打印使用预训练权重的VGG16模型的结构。
+print(vgg16_true)
+
+# 加载CIFAR-10数据集用于训练，下载数据并将图像转换为张量。
+train_data = torchvision.datasets.CIFAR10(root='../data/data_18', train=True, download=True,
+                                          transform=torchvision.transforms.ToTensor())
+
+# vgg16_true.add_module('add_linear', nn.Linear(1000, 10))
+# 在VGG16模型的分类器中添加一个线性层，用于将输出调整为10个类别。
+vgg16_true.classifier.add_module('add_linear', nn.Linear(in_features=1000, out_features=10))
+
+# 打印修改后的使用预训练权重的VGG16模型的结构。
+print(vgg16_true)
+
+# 打印未使用预训练权重的VGG16模型的结构。
+print(vgg16_false)
+
+# 将未使用预训练权重的VGG16模型的分类器的第7层替换为一个新的线性层，输出为10个类别。
+vgg16_false.classifier[6] = nn.Linear(in_features=4096, out_features=10)
+
+# 打印修改后的未使用预训练权重的VGG16模型的结构。
+print(vgg16_false)
+```
+
+## 网络模型的保存和加载
+
+网络模型的保存
+
+```python
+import torch
+import torch.nn as nn
+import torchvision
+
+vgg16 = torchvision.models.vgg16(pretrained=False)
+# 保存方式1,模型结构+模型参数
+torch.save(vgg16, "vgg16_method1.pth")
+
+# 保存方式2，模型参数（官方推荐）
+torch.save(vgg16.state_dict(), "vgg16_method2.pth")
+
+# 陷阱
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        return x
+
+tudui = Tudui()
+torch.save(tudui, "tudui_method1.pth")
+```
+
+```python
+import torch
+import torch.nn as nn
+import torchvision
+
+# 加载VGG16模型，但不使用预训练参数
+vgg16 = torchvision.models.vgg16(pretrained=False)
+
+# 保存方式1：模型结构 + 模型参数
+torch.save(vgg16, "vgg16_method1.pth")  # 保存整个模型（结构+参数）到文件中
+
+# 保存方式2：仅保存模型参数（官方推荐）
+torch.save(vgg16.state_dict(), "vgg16_method2.pth")  # 仅保存模型参数到文件中
+
+# 陷阱示例 - 自定义模型类
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)  # 定义一个卷积层
+
+    def forward(self, x):
+        x = self.conv1(x)  # 前向传播：输入经过卷积层
+        return x
+
+# 创建自定义模型实例
+tudui = Tudui()
+
+# 保存自定义模型的结构和参数
+torch.save(tudui, "tudui_method1.pth")  # 保存整个模型（结构+参数）到文件中
+```
+
+网络模型的加载
+
+```python
+import torch
+import torchvision
+import torch.nn as nn
+from P26_model_save import *
+# 方式1->保存方式1，加载模型
+model = torch.load("vgg16_method1.pth")
+print(model)
+
+# 方式2->保存方式2
+vgg16 = torchvision.models.vgg16(pretrained=False)
+vgg16.load_state_dict(torch.load('vgg16_method2.pth'))
+print(vgg16)
+
+# 陷阱
+# class Tudui(nn.Module):
+#     def __init__(self):
+#         super(Tudui, self).__init__()
+#         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
+#
+#     def forward(self, x):
+#         x = self.conv1(x)
+#         return x
+
+model = torch.load("tudui_method1.pth")
+print(model)
+```
+
+```python
+import torch  # 导入 PyTorch 库
+import torchvision  # 导入 torchvision 库，用于计算机视觉相关操作
+import torch.nn as nn  # 导入 PyTorch 的神经网络模块
+from P26_model_save import *  # 从 P26_model_save 模块导入所有内容
+
+# 方式1->保存方式1，加载模型
+model = torch.load("vgg16_method1.pth")  # 加载通过方式1保存的模型（包括模型结构和参数）
+print(model)  # 打印加载的模型结构
+
+# 方式2->保存方式2
+vgg16 = torchvision.models.vgg16(pretrained=False)  # 初始化一个未预训练的 VGG16 模型
+vgg16.load_state_dict(torch.load('vgg16_method2.pth'))  # 加载通过方式2保存的模型参数（state_dict）
+print(vgg16)  # 打印加载的模型结构
+
+# 陷阱
+# class Tudui(nn.Module):
+#     def __init__(self):
+#         super(Tudui, self).__init__()  # 调用父类的初始化函数
+#         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)  # 定义一个二维卷积层
+
+#     def forward(self, x):
+#         x = self.conv1(x)  # 执行卷积操作
+#         return x  # 返回卷积结果
+
+model = torch.load("tudui_method1.pth")  # 加载通过方式1保存的自定义模型
+print(model)  # 打印加载的模型结构
+```
+
+## 完整的模型训练套路
+
+创建dataset，dataloader加载数据，设置模型的层数，定义损失函数，定义优化器，设置网络参数，开始训练，验证模型，可视化结果
+
+```python
+import torch
+from torch import nn
+
+# 搭建神经网络
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()
+        self.model = nn.Sequential(
+            nn.Conv2d(3, 32, 5, 1, 2),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 32, 5, 1, 2),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 5, 1, 2),
+            nn.MaxPool2d(2),
+            nn.Flatten(),
+            nn.Linear(64*4*4, 64),
+            nn.Linear(64, 10)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+if __name__ == '__main__':
+    tudui = Tudui()
+    input = torch.ones(64, 3, 32, 32)
+    output = tudui(input)
+    print(output.shape)
+
+
+```
+
+```python
+import torch  # 导入 PyTorch 库
+from torch import nn  # 从 PyTorch 导入神经网络模块
+
+# 搭建神经网络
+class Tudui(nn.Module):  # 定义一个名为 Tudui 的神经网络类，继承自 nn.Module
+    def __init__(self):  # 初始化函数
+        super(Tudui, self).__init__()  # 调用父类的初始化函数
+        self.model = nn.Sequential(  # 使用 nn.Sequential 构建一个顺序容器
+            nn.Conv2d(3, 32, 5, 1, 2),  # 定义第一个卷积层，输入通道3，输出通道32，卷积核大小5，步长1，填充2
+            nn.MaxPool2d(2),  # 定义第一个最大池化层，池化窗口大小2
+            nn.Conv2d(32, 32, 5, 1, 2),  # 定义第二个卷积层，输入通道32，输出通道32，卷积核大小5，步长1，填充2
+            nn.MaxPool2d(2),  # 定义第二个最大池化层，池化窗口大小2
+            nn.Conv2d(32, 64, 5, 1, 2),  # 定义第三个卷积层，输入通道32，输出通道64，卷积核大小5，步长1，填充2
+            nn.MaxPool2d(2),  # 定义第三个最大池化层，池化窗口大小2
+            nn.Flatten(),  # 将多维的特征图展平成一维向量
+            nn.Linear(64*4*4, 64),  # 定义第一个全连接层，输入节点64*4*4，输出节点64
+            nn.Linear(64, 10)  # 定义第二个全连接层，输入节点64，输出节点10
+        )
+
+    def forward(self, x):  # 前向传播函数
+        x = self.model(x)  # 将输入数据通过模型进行前向传播
+        return x  # 返回输出结果
+
+if __name__ == '__main__':  # 主程序入口
+    tudui = Tudui()  # 实例化 Tudui 神经网络
+    input = torch.ones(64, 3, 32, 32)  # 创建一个形状为 (64, 3, 32, 32) 的张量，所有元素为1，模拟输入数据
+    output = tudui(input)  # 将输入数据通过模型，得到输出
+    print(output.shape)  # 打印输出张量的形状
+```
+
+```python
+import torch
+import torchvision
+from torch import nn
+from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
+
+from P27_model import *
+# 准备数据集
+train_data = torchvision.datasets.CIFAR10(root='../data/data_18', train=True, download=True,
+                                          transform=torchvision.transforms.ToTensor())
+test_data = torchvision.datasets.CIFAR10(root='../data/data_18', train=False,download=True,
+                                         transform=torchvision.transforms.ToTensor())
+
+# length长度
+train_data_size = len(train_data)
+test_data_size = len(test_data)
+print("训练数据集的长度为:{}".format(train_data_size))
+print("测试数据集的长度为:{}".format(test_data_size))
+
+# 利用dataloader来加载数据集
+train_dataloader = DataLoader(train_data, batch_size=64)
+test_dataloader = DataLoader(test_data, batch_size=64)
+
+# 创建网络模型
+tudui = Tudui()
+
+# 损失函数
+loss_fn = nn.CrossEntropyLoss()
+
+# 优化器
+learning_rate = 0.01
+optimizer = torch.optim.SGD(tudui.parameters(), lr=learning_rate)
+
+# 设置训练网络的一些参数
+# 记录训练的次数
+total_train_step = 0
+# 记录测试的次数
+total_test_step = 0
+# 训练的论数
+epoch = 10
+
+# 添加tensorboard
+writer = SummaryWriter(log_dir='../logs/log_train')
+
+for i in range(epoch):
+    print("--------第{}轮训练开始了-----------".format(i+1))
+
+    # 训练步骤开始
+    tudui.train()
+    for data in train_dataloader:
+        imgs, targets = data
+        outputs = tudui(imgs)
+        loss = loss_fn(outputs, targets)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        total_train_step += 1
+        if total_train_step % 100 == 0:
+            print("训练次数：{},Loss:{}".format(total_train_step, loss.item()))
+            writer.add_scalar('train_loss', loss.item(), total_train_step)
+
+    # 测试步骤开始
+    tudui.eval()
+    total_test_loss = 0
+    total_accuracy = 0
+    with torch.no_grad():
+        for data in test_dataloader:
+            imgs, targets = data
+            outputs = tudui(imgs)
+            loss = loss_fn(outputs, targets)
+            total_test_loss += total_test_loss + loss.item()
+            accuracy = (outputs.argmax(1) == targets).sum()
+            total_accuracy += accuracy
+
+    print("整体测试集上的Loss: {}".format(total_test_loss))
+    print("整体测试集上的正确率: {}".format(total_accuracy/test_data_size))
+    writer.add_scalar('test_loss', total_test_loss, total_test_step)
+    writer.add_scalar('test_accuracy', total_accuracy/test_data_size, total_test_step)
+    total_test_step += 1
+
+    torch.save(tudui, "tudui_{}.pth".format(i))
+    # torch.save(tudui,state_dict(), "tudui_{}.pth".format(i))
+    print("模型已保存")
+
+writer.close()
+```
+
+```python
+import torch  # 导入 PyTorch 库
+import torchvision  # 导入 torchvision 库，用于计算机视觉相关操作
+from torch import nn  # 从 PyTorch 导入神经网络模块
+from torch.utils.data import DataLoader  # 从 PyTorch 导入数据加载器模块
+from torch.utils.tensorboard import SummaryWriter  # 从 PyTorch 导入 TensorBoard 的日志记录模块
+
+from P27_model import *  # 从 P27_model 模块导入所有内容
+
+# 准备数据集
+train_data = torchvision.datasets.CIFAR10(  # 加载 CIFAR-10 训练数据集
+    root='../data/data_18',  # 数据集下载到的目录
+    train=True,  # 指定为训练数据集
+    download=True,  # 如果数据集不存在则下载
+    transform=torchvision.transforms.ToTensor()  # 将图像转换为 Tensor
+)
+
+test_data = torchvision.datasets.CIFAR10(  # 加载 CIFAR-10 测试数据集
+    root='../data/data_18',  # 数据集下载到的目录
+    train=False,  # 指定为测试数据集
+    download=True,  # 如果数据集不存在则下载
+    transform=torchvision.transforms.ToTensor()  # 将图像转换为 Tensor
+)
+
+# length长度
+train_data_size = len(train_data)  # 训练数据集的样本数量
+test_data_size = len(test_data)  # 测试数据集的样本数量
+print("训练数据集的长度为:{}".format(train_data_size))  # 打印训练数据集的样本数量
+print("测试数据集的长度为:{}".format(test_data_size))  # 打印测试数据集的样本数量
+
+# 利用dataloader来加载数据集
+train_dataloader = DataLoader(train_data, batch_size=64)  # 创建训练数据加载器，批量大小为64
+test_dataloader = DataLoader(test_data, batch_size=64)  # 创建测试数据加载器，批量大小为64
+
+# 创建网络模型
+tudui = Tudui()  # 实例化自定义的 Tudui 神经网络模型
+
+# 损失函数
+loss_fn = nn.CrossEntropyLoss()  # 使用交叉熵损失函数
+
+# 优化器
+learning_rate = 0.01  # 学习率
+optimizer = torch.optim.SGD(tudui.parameters(), lr=learning_rate)  # 使用随机梯度下降优化器
+
+# 设置训练网络的一些参数
+# 记录训练的次数
+total_train_step = 0  # 初始化训练步骤计数器
+# 记录测试的次数
+total_test_step = 0  # 初始化测试步骤计数器
+# 训练的轮数
+epoch = 10  # 设置训练的总轮数
+
+# 添加tensorboard
+writer = SummaryWriter(log_dir='../logs/log_train')  # 创建 TensorBoard 日志记录器
+
+for i in range(epoch):  # 遍历每一轮训练
+    print("--------第{}轮训练开始了-----------".format(i+1))  # 打印当前训练轮数
+
+    # 训练步骤开始
+    tudui.train()  # 设置模型为训练模式
+    for data in train_dataloader:  # 遍历训练数据加载器中的每一个批次
+        imgs, targets = data  # 获取批次中的图像和目标
+        outputs = tudui(imgs)  # 将图像输入模型得到输出
+        loss = loss_fn(outputs, targets)  # 计算输出与目标之间的损失
+
+        optimizer.zero_grad()  # 梯度清零
+        loss.backward()  # 反向传播计算梯度
+        optimizer.step()  # 更新模型参数
+
+        total_train_step += 1  # 更新训练步骤计数器
+        if total_train_step % 100 == 0:  # 每训练100步输出一次日志
+            print("训练次数：{},Loss:{}".format(total_train_step, loss.item()))  # 打印当前训练步骤和损失值
+            writer.add_scalar('train_loss', loss.item(), total_train_step)  # 将损失值写入 TensorBoard
+
+    # 测试步骤开始
+    tudui.eval()  # 设置模型为评估模式
+    total_test_loss = 0  # 初始化测试集损失累计值
+    total_accuracy = 0  # 初始化测试集准确率累计值
+    with torch.no_grad():  # 禁用梯度计算
+        for data in test_dataloader:  # 遍历测试数据加载器中的每一个批次
+            imgs, targets = data  # 获取批次中的图像和目标
+            outputs = tudui(imgs)  # 将图像输入模型得到输出
+            loss = loss_fn(outputs, targets)  # 计算输出与目标之间的损失
+            total_test_loss += total_test_loss + loss.item()  # 累加损失值
+            accuracy = (outputs.argmax(1) == targets).sum()  # 计算预测正确的样本数
+            total_accuracy += accuracy  # 累加正确预测的样本数
+
+    print("整体测试集上的Loss: {}".format(total_test_loss))  # 打印测试集上的总损失
+    print("整体测试集上的正确率: {}".format(total_accuracy/test_data_size))  # 打印测试集上的总准确率
+    writer.add_scalar('test_loss', total_test_loss, total_test_step)  # 将测试集损失写入 TensorBoard
+    writer.add_scalar('test_accuracy', total_accuracy/test_data_size, total_test_step)  # 将测试集准确率写入 TensorBoard
+    total_test_step += 1  # 更新测试步骤计数器
+
+    torch.save(tudui, "tudui_{}.pth".format(i))  # 保存当前训练轮次的模型
+    # torch.save(tudui.state_dict(), "tudui_{}.pth".format(i))  # 保存当前训练轮次的模型参数（可选）
+    print("模型已保存")  # 打印模型保存完成
+
+writer.close()  # 关闭 TensorBoard 日志记录器
+```
+
+## 完整的模型测试模型
+
+```python
+import torch
+from PIL import Image
+import torchvision
+from torch import nn
+
+img_path = "../data/dog.png"
+img = Image.open(img_path)
+print(img)
+
+img = img.convert('RGB')
+transform = torchvision.transforms.Compose([torchvision.transforms.Resize((32, 32)),
+                                            torchvision.transforms.ToTensor()])
+
+img = transform(img)
+print(img.shape)
+
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()
+        self.model = nn.Sequential(
+            nn.Conv2d(3, 32, 5, 1, 2),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 32, 5, 1, 2),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 5, 1, 2),
+            nn.MaxPool2d(2),
+            nn.Flatten(),
+            nn.Linear(64*4*4, 64),
+            nn.Linear(64, 10)
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
+
+model = torch.load('tudui_9.pth')
+print(model)
+
+img = torch.reshape(img, (1, 3, 32, 32))
+model.eval()
+with torch.no_grad():
+    output = model(img)
+print(output)
+
+print(output.argmax(1))
+```
+
+```python
+import torch  # 导入 PyTorch 库
+from PIL import Image  # 导入用于处理图像的库
+import torchvision  # 导入用于计算机视觉任务的 PyTorch 扩展库
+from torch import nn  # 导入用于构建神经网络的模块
+
+# 图像的路径
+img_path = "../data/dog.png"
+img = Image.open(img_path)  # 打开图像
+print(img)  # 打印图像信息
+
+# 将图像转换为RGB格式
+img = img.convert('RGB')
+# 定义图像转换，包括调整大小和转换为张量
+transform = torchvision.transforms.Compose([
+    torchvision.transforms.Resize((32, 32)),  # 调整图像大小为32x32
+    torchvision.transforms.ToTensor()  # 将图像转换为张量
+])
+
+# 应用转换到图像
+img = transform(img)
+print(img.shape)  # 打印转换后图像的形状
+
+# 定义一个名为Tudui的神经网络模型
+class Tudui(nn.Module):
+    def __init__(self):
+        super(Tudui, self).__init__()  # 调用父类的构造函数
+        self.model = nn.Sequential(  # 使用顺序容器定义网络结构
+            nn.Conv2d(3, 32, 5, 1, 2),  # 第一个卷积层，输入通道3，输出通道32，卷积核大小5，步长1，填充2
+            nn.MaxPool2d(2),  # 最大池化层，池化大小2
+            nn.Conv2d(32, 32, 5, 1, 2),  # 第二个卷积层，输入通道32，输出通道32
+            nn.MaxPool2d(2),  # 最大池化层
+            nn.Conv2d(32, 64, 5, 1, 2),  # 第三个卷积层，输入通道32，输出通道64
+            nn.MaxPool2d(2),  # 最大池化层
+            nn.Flatten(),  # 展平层
+            nn.Linear(64*4*4, 64),  # 全连接层，输入大小64*4*4，输出大小64
+            nn.Linear(64, 10)  # 全连接层，输入大小64，输出大小10
+        )
+
+    def forward(self, x):
+        x = self.model(x)  # 前向传播，通过模型进行计算
+        return x
+
+# 加载预训练模型
+model = torch.load('tudui_9.pth')
+print(model)  # 打印模型结构
+
+# 重新调整图像张量的形状
+img = torch.reshape(img, (1, 3, 32, 32))
+model.eval()  # 设置模型为评估模式
+with torch.no_grad():  # 关闭梯度计算
+    output = model(img)  # 获取模型的输出
+print(output)  # 打印输出
+
+# 打印输出中概率最大的类别
+print(output.argmax(1))
+```
+
+# 完结
+
